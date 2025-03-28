@@ -1,4 +1,4 @@
-## ---- echo = FALSE------------------------------------------------------------
+## ----echo = FALSE-------------------------------------------------------------
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", 
                       fig.width = 7, fig.height = 5)
 
@@ -57,13 +57,13 @@ PI_varimp
 
 ## Splitwise Unconditional Permutation Importance
 set.seed(542863)
-PI_permimp2 <- permimp(cfAirq50, progressBar = FALSE)
+PI_permimp2 <- permimp(cfAirq50, progressBar = FALSE, oldSeedSelection = TRUE)
 set.seed(542863)
 PI_varimp2 <- varimp(cfAirq50)
 PI_permimp2
 PI_varimp2
 
-## ----eval = TRUE, echo = TRUE-------------------------------------------------
+## ----barplot, eval = TRUE, echo = TRUE, fig.alt = "Barplot of Permutation Importance values."----
 ## fit a new forest with 500 trees
 set.seed(542863)
 cfAirq500 <- cforest(Ozone ~ ., data = airq,
@@ -78,15 +78,18 @@ PI_permimp500 <- permimp(cfAirq500, progressBar = FALSE)
 ## barplot
 plot(PI_permimp500, type = "bar")
 
+## ----barplot-quantiles,  eval = TRUE, echo = TRUE, fig.alt = "Barplot of Permutation Importance values with quantile interval."----
 ## barplot with visualization of the distribution: an
 ## interval between the .25 and .75 quantiles of the per 
 ## Tree values is added to the plot
 plot(PI_permimp500, type = "bar", interval = "quantile")
 
+## ----barplot-horizontal,  eval = TRUE, echo = TRUE, fig.alt = "Horizontal barplot of Permutation Importance values."----
 ## horizontal boxplot
 plot(PI_permimp500, type = "box", horizontal = TRUE)
 
-## unsorted dotplot
+## ----dotplot unsorted,  eval = TRUE, echo = TRUE, fig.alt = "Unsorted dotplot of Permutation Importance values."----
+## unsorted-dotplot
 plot(PI_permimp500, type = "dot", sort = FALSE, 
      interval = "quantile")
 
@@ -96,11 +99,11 @@ set.seed(542863)
 rfAirq50 <- randomForest(Ozone ~ ., data = airq, mtry = 2, replace = FALSE, 
                          nodesize = 7, keep.forest = TRUE, keep.inbag = TRUE)
 
-## ---- eval = TRUE, echo = FALSE-----------------------------------------------
+## ----eval = FALSE, echo = TRUE------------------------------------------------
+# CPI_permimpRF <- permimp(rfAirq50, conditional = TRUE, progressBar = FALSE)
+# plot(CPI_permimpRF, horizontal = TRUE)
+
+## ----randomforest, eval = TRUE, echo = FALSE, fig.alt = "Barplot of Conditional Permutation Importance values for a Random Forest by the RandomForest-package."----
 CPI_permimpRF <- permimp(rfAirq50, conditional = TRUE, progressBar = FALSE, do_check = FALSE)
 plot(CPI_permimpRF, horizontal = TRUE)
-
-## ---- eval = FALSE, echo = TRUE-----------------------------------------------
-#  CPI_permimpRF <- permimp(rfAirq50, conditional = TRUE, progressBar = FALSE)
-#  plot(CPI_permimpRF, horizontal = TRUE)
 

@@ -91,6 +91,11 @@ test_that("plot gives no errors", {
                       horizontal = TRUE, interval = "quantile"))
 })
 
+### test progress bar
+test_that("progress bar works", {
+  expect_silent(permimp(cfAirq5, conditional = TRUE))
+})
+
 
 ### errors, warnings and messages for permimp
 test_that("permimp returns errors and warnings", {
@@ -126,7 +131,7 @@ test_that("unconditional permimp is the same as unconditional varimp", {
   ### get CPI using permip
   set.seed(542863)
   permimp <- permimp(cfAirq5, 
-                     progressBar = FALSE)
+                     progressBar = FALSE, oldSeedSelection = TRUE)
   
   ### get CPI using varimp
   set.seed(542863)
@@ -160,11 +165,8 @@ test_that("unconditional permimp is the same as unconditional varimp", {
   varimp_s <- varimp(cf_surv)
   
   set.seed(54283)
-  varimp_s <- varimp(cf_surv)
-  
-  set.seed(54283)
   permimp_s <- permimp(cf_surv, 
-                       progressBar = FALSE)
+                       progressBar = FALSE, oldSeedSelection = TRUE)
 
   
   set.seed(542863)

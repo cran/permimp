@@ -11,20 +11,22 @@
     importance is implemented differently, selecting the predictions to condition 
     on in each tree using Pearson Chi-squared tests applied to the 
     by-split point-categorized predictors. In general the new implementation has
-    similar results as the original \code{\link{varimp}} function. With 
+    similar results as the original \code{\link[party:varimp]{varimp}} function. With 
     \code{asParty = TRUE}, the partial/conditional permutation importance is 
-    fully backward-compatible but faster than the original \code{\link{varimp}}
+    fully backward-compatible but faster than the original \code{\link[party:varimp]{varimp}}
     function in \pkg{party}.
 }
 \usage{ 
 permimp(object, ...)
 \method{permimp}{randomForest}(object, nperm = 1, OOB = TRUE, scaled = FALSE,
      conditional = FALSE, threshold = .95, whichxnames = NULL,   
-     thresholdDiagnostics = FALSE, progressBar = TRUE,  do_check = TRUE, ...)
+     thresholdDiagnostics = FALSE, progressBar = interactive(), do_check = TRUE, 
+     oldSeedSelection = FALSE, cl = NULL, ...)
 \method{permimp}{RandomForest}(object, nperm = 1, OOB = TRUE, scaled = FALSE,
      conditional = FALSE, threshold = .95, whichxnames = NULL,   
-     thresholdDiagnostics = FALSE, progressBar = TRUE, 
-     pre1.0_0 = conditional, AUC = FALSE, asParty = FALSE, mincriterion = 0, ...)
+     thresholdDiagnostics = FALSE, progressBar = interactive(), 
+     pre1.0_0 = conditional, AUC = FALSE, asParty = FALSE, mincriterion = 0, 
+     oldSeedSelection = FALSE, cl = NULL, ...)
 }
 \arguments{
   \item{object}{ an object as returned by \code{cforest} or \code{randomForest}.}
@@ -62,7 +64,7 @@ permimp(object, ...)
 			  importance is more robust towards class imbalance, but it is 
 			  only applicable to binary classification.}
   \item{asParty}{ a logical that determines whether or not exactly the same 
-                  values as the original \code{\link{varimp}} function in 
+                  values as the original \code{\link[party:varimp]{varimp}} function in 
 				  \pkg{party} should be obtained.}
   \item{whichxnames}{ a character vector containing the predictor variable 
                       names for which the permutation importance should be 
@@ -74,19 +76,30 @@ permimp(object, ...)
   \item{progressBar}{ a logical that determines whether a progress bar should 
                       be displayed.}
   \item{do_check}{ a logical that determines whether a check requiring user 
-                   input should be included.}                    
+                   input should be included.} 
+  \item{oldSeedSelection}{ a logical that determines whether the selection of
+                           random numbers should be the same is in the 1.1
+                           version of the package. The default is \code{FALSE}, 
+                           so that seeds are generated for each tree, and the
+                           results are reproducible, also when parallel processing
+                           is used.} 
+  \item{cl}{ A cluster object created by \code{\link{makeCluster}}, or an 
+             integer to indicate number of child-processes (integer values 
+             are ignored on Windows) for parallel evaluations (see Details 
+             on parallel computing). \code{NULL} (default) refers to sequential 
+             evaluation.}
   \item{...}{ additional arguments to be passed to the Methods}
 }
 \details{
 
-  Function \code{permimp} is highly comparable to \code{\link{varimp}} in \pkg{party},
+  Function \code{permimp} is highly comparable to \code{\link[party:varimp]{varimp}} in \pkg{party},
   but the partial/conditional variable importance has a different, more efficient
-  implementation. Compared to the original \code{\link{varimp}} in \pkg{party}, 
+  implementation. Compared to the original \code{\link[party:varimp]{varimp}} in \pkg{party}, 
   \code{permimp} applies a different strategy to select the predictors to condition 
   on (ADD REFERENCE TO PAPER). 
   
   With \code{asParty = TRUE}, permimp returns exactly the same values as 
-  \code{\link{varimp}} in \pkg{party}, but the computation is done more efficiently.
+  \code{\link[party:varimp]{varimp}} in \pkg{party}, but the computation is done more efficiently.
   
   If \code{conditional = TRUE}, the importance of each variable is computed by
   permuting within a grid defined by the predictors that are associated  
@@ -101,10 +114,26 @@ permimp(object, ...)
   limited to this selection of predictors. Only use when fully aware of the 
   implications.
   
-  For further details, please refer to the documentation of \code{\link{varimp}}.
+  For parallel processing, the \pkg{pbapply} package, a wrapper around the \pkg{parallel} 
+  package is used. Parallel processing can be enabled through the \code{cl}
+  argument.  \code{\link{parLapply}} is called when \code{cl} is a 'cluster' 
+  object, \code{\link{mclapply}} is called when \code{cl} is an integer. 
+  
+  When doing parallel processing, other objects might need to pushed to the 
+  workers, and random numbers must be handled with care (see the Examples of the
+  \pkg{pbapply} package).
+  
+  When using parallel processing, showing the progress bar increases the 
+  communication overhead between the main process and nodes / child processes
+  compared to the parallel equivalents of the functions without the progress bar.
+  The functions fall back to their original equivalents when 
+  \code{progressBar = FALSE}. This is the default when \code{interactive()} is 
+  \code{FALSE} (i.e. called from command line R script)
+  
+  For further details, please refer to the documentation of \code{\link[party:varimp]{varimp}}.
 }
 \value{
-    An object of class \code{\link{VarImp}}, with the mean decrease in accuracy 
+    An object of class \code{\link[party:varimp]{varimp}}, with the mean decrease in accuracy 
     as its \code{$values}. 
 }
 \references{ 
@@ -135,7 +164,7 @@ permimp(object, ...)
     Revisited. \emph{BMC Bioinformatics}, \bold{21}, 307. 
     \url{https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-020-03622-2}
 }
-\seealso{\code{\link{varimp}}, \code{\link{VarImp}}
+\seealso{\code{\link[party:varimp]{varimp}}, \code{\link{VarImp}}
 }
 \examples{
   
@@ -160,7 +189,7 @@ permimp(object, ...)
   set.seed(290875)
   party::varimp(readingSkills.cf)
   set.seed(290875)
-  permimp(readingSkills.cf)
+  permimp(readingSkills.cf, oldSeedSelection = TRUE)
   
   
   ###
@@ -181,6 +210,29 @@ permimp(object, ...)
   set.seed(290875)
   permimp(readingSkills.rf, conditional = TRUE, threshold = .8, do_check = FALSE)
                               
+  \dontrun{
+  ### Parallel processing - Windows
+  # Only relevant for large trees, for small trees, there may not even be a 
+  # 'speed up', but a 'slow down'
   
+  # Make a larger forest
+  set.seed(290875)
+  readingSkills.cf <- party::cforest(score ~ ., data = party::readingSkills, 
+                                     control = party::cforest_unbiased(mtry = 2, 
+                                                                       ntree = 200))
+  
+  # sequentiall processing
+  set.seed(290875)
+  system.time(print(permimp(readingSkills.cf, conditional = TRUE, asParty = FALSE)))
+  
+  # parallel processing
+  # note that the results are reproducible despite using multiple cores
+  cluster <- parallel::makeCluster(2)
+
+  set.seed(290875)
+  system.time(print(permimp(readingSkills.cf, conditional = TRUE, 
+                            asParty = FALSE, cl = cluster, progressBar = FALSE)))
+  parallel::stopCluster(cluster)
+  }
 }
 \keyword{tree}
